@@ -1,0 +1,132 @@
+# golangci-lint v2 configuration for a service built with this handbook.
+# Copy to the repository root as .golangci.yml and replace every occurrence of
+# example.com/orders with your module path.
+#
+# Last verified: 2026-10-28 with golangci-lint 2.13.2 (`golangci-lint config verify`).
+#
+# Mechanical style is owned by the formatters below; architecture boundaries are
+# owned by depguard; everything else in the handbook is review-enforced.
+version: "2"
+
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  default: standard # errcheck, govet, ineffassign, staticcheck, unused
+  enable:
+    - bodyclose
+    - containedctx # no context.Context stored in structs
+    - depguard # layer boundaries, see settings below
+    - errname # ErrX sentinels, XError types
+    - errorlint # errors.Is/As instead of == and type assertions
+    - exhaustive # switches over enums handle every value
+    - exptostd
+    - fatcontext
+    - forbidigo
+    - gosec
+    - intrange
+    - misspell
+    - modernize
+    - nilerr
+    - noctx
+    - nolintlint
+    - protogetter
+    - rowserrcheck
+    - sloglint
+    - sqlclosecheck
+    - unconvert
+    - unparam
+    - usestdlibvars
+    - usetesting
+    - wastedassign
+
+  settings:
+    exhaustive:
+      default-signifies-exhaustive: true
+
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+
+    sloglint:
+      kv-only: true # logger.Info("msg", "key", value) — no mixed attr styles
+      context: scope # use the *Context variants where a ctx is in scope
+
+    forbidigo:
+      analyze-types: true
+      forbid:
+        - pattern: ^fmt\.Print(f|ln)?$
+          msg: use the injected *slog.Logger; stdout is not a log sink
+        - pattern: ^time\.Sleep$
+          msg: honor ctx.Done() with a timer, or use testing/synctest in tests
+
+    depguard:
+      rules:
+        # The domain is pure: no I/O, no transport, no storage, no context.
+        domain:
+          files:
+            - "**/internal/*/domain/**"
+          deny:
+            - pkg: context
+              desc: domain methods take explicit values, never a context
+            - pkg: database/sql
+              desc: persistence belongs in adapters
+            - pkg: net
+              desc: network I/O belongs in adapters
+            - pkg: os
+              desc: configuration and files enter through the composition root
+            - pkg: log
+              desc: domain code returns errors and records events; it does not log
+            - pkg: google.golang.org/grpc
+              desc: transport types stay in the transport adapter
+            - pkg: google.golang.org/protobuf
+              desc: wire types are mapped at the adapter boundary
+            - pkg: example.com/orders/internal/orders/adapters
+              desc: dependencies point inward
+            - pkg: example.com/orders/internal/orders/usecases
+              desc: dependencies point inward
+            - pkg: example.com/orders/internal/platform/memstore
+              desc: storage stays in adapters
+
+        # Application code depends on ports, never on concrete adapters.
+        application:
+          files:
+            - "**/internal/*/usecases/**"
+            - "**/internal/*/queries/**"
+            - "**/internal/*/ports/**"
+            - "!$test"
+          deny:
+            - pkg: database/sql
+              desc: use a port implemented by an adapter
+            - pkg: google.golang.org/grpc
+              desc: map transport types in the handler
+            - pkg: google.golang.org/protobuf
+              desc: map wire types in the adapter
+            - pkg: example.com/orders/internal/orders/adapters
+              desc: depend on ports; the composition root wires adapters
+            - pkg: example.com/orders/internal/platform/memstore
+              desc: depend on ports; the composition root wires adapters
+
+  exclusions:
+    generated: strict
+    presets:
+      - std-error-handling
+      - common-false-positives
+    rules:
+      - path: _test\.go
+        linters:
+          - gosec
+          - unparam
+          - forbidigo
+
+formatters:
+  enable:
+    - gofumpt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - example.com/orders
+  exclusions:
+    generated: strict

@@ -1,0 +1,13 @@
+# buf module configuration. Copy to the repository root.
+# Last verified: 2026-10-28 with buf 1.75.0 (`buf dep update`, `buf lint`, `buf generate`).
+version: v2
+modules:
+  - path: proto
+deps:
+  - buf.build/googleapis/googleapis # google/type/money.proto and friends
+lint:
+  use:
+    - STANDARD
+breaking:
+  use:
+    - FILE

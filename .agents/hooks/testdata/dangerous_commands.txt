@@ -1,0 +1,28 @@
+# One command per line. Every line must be BLOCKED (exit 2).
+rm -rf /tmp/project
+rm -rf .
+rm -fr build
+git push --force origin main
+git push origin main --force
+git push -f origin main
+git reset --hard HEAD~3
+git reset --hard origin/main
+git clean -fd
+git checkout -- .
+git restore .
+DROP TABLE users
+drop table users
+drop database orders
+TRUNCATE TABLE orders
+truncate table orders
+DELETE FROM users
+delete from users
+chmod 777 /tmp/file
+chmod -R 755 /tmp/dir
+kubectl delete pod my-pod
+kubectl delete namespace production
+docker rm -f container123
+docker rmi -f image123
+docker system prune -a
+dd if=/dev/zero of=/dev/sda
+mkfs.ext4 /dev/sdb1

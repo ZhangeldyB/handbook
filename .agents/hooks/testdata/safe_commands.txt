@@ -1,0 +1,17 @@
+# One command per line. Every line must be ALLOWED (exit 0).
+rm specific-file.go
+rm -r build/tmp
+git push origin main
+git push --force-with-lease origin main
+git reset --soft HEAD~1
+git stash
+git restore internal/orders/domain/order.go
+git clean -n
+go test ./...
+make lint
+DELETE FROM users WHERE id = '123'
+truncate -s 0 app.log
+chmod 644 file.go
+kubectl get pods
+docker ps
+grep -rn "drop" internal/
